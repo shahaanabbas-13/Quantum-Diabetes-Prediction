@@ -7,3 +7,5 @@ models/
 results/
 dataset/*.csv
 .env
+token.txt
+.GITHUB_TOKEN.txt
