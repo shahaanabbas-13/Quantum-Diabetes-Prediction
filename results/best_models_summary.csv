@@ -1,0 +1,11 @@
+metric,best_model,best_score
+accuracy,Random Forest,0.7597402597402597
+precision,Gradient Boosting,0.6888888888888889
+recall,QSVM,0.7407407407407407
+f1_score,QSVM,0.6504065040650406
+f2_score,QSVM,0.7017543859649122
+roc_auc,Gradient Boosting,0.8314814814814814
+pr_auc,Gradient Boosting,0.7251057304233998
+specificity,Gradient Boosting,0.86
+balanced_accuracy,Random Forest,0.7298148148148148
+negative_predictive_value,QSVM,0.8352941176470589
