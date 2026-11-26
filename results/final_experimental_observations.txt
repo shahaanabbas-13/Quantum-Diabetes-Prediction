@@ -1,0 +1,13 @@
+FINAL EXPERIMENTAL OBSERVATIONS
+
+1. All six models were evaluated on the same 154 held-out test samples.
+2. Classical models were trained using 614 training samples.
+3. Quantum models used a 250-sample subset for quantum training.
+4. QSVM achieved the highest recall among the evaluated models.
+5. QSVM produced the lowest number of false negatives.
+6. Gradient Boosting achieved the highest ROC-AUC and specificity.
+7. Random Forest and Gradient Boosting achieved the highest accuracy.
+8. VQC showed lower performance than the other evaluated models.
+9. Quantum models were evaluated using a simulator, not quantum hardware.
+10. Differences in training sample size and preprocessing should be considered.
+11. The experiments do not establish quantum advantage or clinical readiness.
