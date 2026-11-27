@@ -1,0 +1,1 @@
+"""Q-Diabetes application package."""
