@@ -34,18 +34,13 @@ uploaded = st.file_uploader(
 
 if uploaded is not None and st.button("Extract candidate values", type="primary"):
     try:
-        from app.services.report_extraction import extract_report
+        from app.services.local_ocr_bridge import extract_candidates_locally
 
-        # Only candidate values/context remain in session state; extracted full text is discarded.
-        _full_text, candidates = extract_report(uploaded.name, uploaded.getvalue())
+        # Bytes pass through a local process pipe; only candidate values/context
+        # remain in session state, while extracted full text is discarded.
+        candidates = extract_candidates_locally(uploaded.name, uploaded.getvalue())
         st.session_state["report_candidates"] = [asdict(candidate) for candidate in candidates]
         st.success(f"Extraction complete. Found {len(candidates)} candidate measurement(s).")
-    except ImportError as exc:
-        st.error(
-            "Local PDF/OCR libraries are not installed for this Python environment. "
-            "Use Python 3.12 and install app/requirements-documents.txt. "
-            f"Details: {exc}"
-        )
     except (ValueError, RuntimeError) as exc:
         st.error(str(exc))
 

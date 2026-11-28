@@ -16,21 +16,27 @@ pip install -r app\requirements.txt
 python -m streamlit run app\dashboard.py
 ```
 
-The optional medical-report extractor uses locally installed PDF and OCR
-libraries. On Windows, install them in a Python 3.12 environment with:
+The dashboard can run in the existing app environment while document parsing
+runs in a separate local Python 3.12 worker. The uploaded bytes are passed to
+that worker over stdin; no report file is written. Set up the worker with:
 
 ```powershell
 py -3.12 -m venv .venv-documents
 .\.venv-documents\Scripts\Activate.ps1
-pip install -r app\requirements.txt
 pip install -r app\requirements-documents.txt
-python -m streamlit run app\dashboard.py
+deactivate
 ```
 
-Image OCR and scanned-PDF OCR require RapidOCR's native runtime dependencies.
-If local policy blocks a native dependency, the extraction button reports the
-error; users can still enter values manually. OCR behavior must be validated on
-the deployment machine before relying on report uploads.
+From the normal application environment, validate the image and scanned-PDF
+OCR paths using synthetic fixtures only:
+
+```powershell
+python -m app.validate_ocr
+```
+
+The worker defaults to `.venv-documents\Scripts\python.exe`. For a different
+location, set `QD_OCR_PYTHON` to the Python 3.12 executable. On a deployment
+machine, run the synthetic validation command before enabling report uploads.
 
 The application expects these classical artifacts under `models/classical/`:
 
