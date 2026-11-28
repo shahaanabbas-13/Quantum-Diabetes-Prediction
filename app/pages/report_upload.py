@@ -86,7 +86,11 @@ with st.form("report_confirmed_prediction", clear_on_submit=False):
     for index, (feature, unit, step) in enumerate(field_spec):
         matches = candidate_map.get(feature, [])
         distinct_values = {float(item["value"]) for item in matches}
-        unit_compatible = all("not mapped" not in item["unit"].lower() for item in matches)
+        unit_compatible = all(
+            "not mapped" not in item["unit"].lower()
+            and "not stated" not in item["unit"].lower()
+            for item in matches
+        )
         candidate_value = next(iter(distinct_values)) if len(distinct_values) == 1 and unit_compatible else None
         target_col = col_a if index % 2 == 0 else col_b
         with target_col:
@@ -107,7 +111,7 @@ with st.form("report_confirmed_prediction", clear_on_submit=False):
                 units = sorted({item["unit"] for item in matches})
                 st.caption("Extracted unit/context: " + "; ".join(units))
                 if not unit_compatible:
-                    st.caption("This candidate was not placed in the model field because the source unit does not match. Enter a measured value in the required unit after review.")
+                    st.caption("This candidate was not placed in the model field because its unit is missing or does not match. Enter a measured value in the required unit after review.")
 
     selected_models = st.multiselect(
         "Models to run",

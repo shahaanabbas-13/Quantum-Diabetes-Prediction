@@ -53,7 +53,8 @@ def extract_candidates_from_lines(
         (
             "BMI",
             re.compile(
-                r"\b(?:BMI|body\s+mass\s+index)\b[^\d\n]{0,16}"
+                # OCR commonly confuses capital I with lowercase l or digit 1.
+                r"\b(?:BM[I1l]|body\s+mass\s+index)\b[^\d\n]{0,16}"
                 r"(\d{1,2}(?:\.\d+)?)\s*(kg\s*/\s*m(?:2|²))?",
                 re.IGNORECASE,
             ),

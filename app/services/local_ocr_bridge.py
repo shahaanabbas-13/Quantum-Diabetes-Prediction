@@ -11,7 +11,7 @@ import sys
 from app.services.report_extraction import Candidate
 
 
-def _worker_python() -> Path:
+def local_ocr_worker_python() -> Path:
     configured = os.environ.get("QD_OCR_PYTHON")
     if configured:
         executable = Path(configured).expanduser()
@@ -32,7 +32,7 @@ def extract_candidates_locally(file_name: str, content: bytes) -> list[Candidate
     """Send report bytes over a local process pipe; no report file is created."""
     repository = Path(__file__).resolve().parents[2]
     command = [
-        str(_worker_python()),
+        str(local_ocr_worker_python()),
         "-m",
         "app.ocr_worker",
         file_name,

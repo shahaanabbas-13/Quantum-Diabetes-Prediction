@@ -25,6 +25,21 @@ class ReportCandidateParsingTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertIn("not mapped", rows[0].unit.lower())
 
+    def test_glucose_without_unit_is_flagged_for_manual_confirmation(self) -> None:
+        rows = extract_candidates_from_lines([("Fasting glucose: 120", 2, 0.91)])
+        self.assertEqual(len(rows), 1)
+        self.assertIn("not stated", rows[0].unit.lower())
+
+    def test_multiple_glucose_measurements_are_kept_separately(self) -> None:
+        rows = extract_candidates_from_lines(
+            [
+                ("Fasting glucose: 120 mg/dL", 1, 0.99),
+                ("Fasting glucose: 135 mg/dL", 2, 0.98),
+            ]
+        )
+        self.assertEqual([row.value for row in rows], [120, 135])
+        self.assertEqual([row.page for row in rows], [1, 2])
+
     def test_blood_pressure_maps_only_diastolic_component(self) -> None:
         rows = extract_candidates_from_lines([("Blood pressure 120/80 mmHg", 3, 0.95)])
         self.assertEqual([(row.feature, row.value) for row in rows], [("BloodPressure", 80)])

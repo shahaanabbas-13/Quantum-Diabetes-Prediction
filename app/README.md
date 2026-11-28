@@ -34,6 +34,12 @@ OCR paths using synthetic fixtures only:
 python -m app.validate_ocr
 ```
 
+The validation covers reduced resolution, a 2.5-degree rotation, alternate
+layout and type size, multiple glucose readings, missing glucose units, scanned
+PDF extraction, and safe rejection of corrupt and password-protected PDFs.
+These are software fixtures, not a substitute for validation on a diverse set
+of real report formats. Extracted values still require explicit user confirmation.
+
 The worker defaults to `.venv-documents\Scripts\python.exe`. For a different
 location, set `QD_OCR_PYTHON` to the Python 3.12 executable. On a deployment
 machine, run the synthetic validation command before enabling report uploads.
