@@ -10,6 +10,8 @@ import sys
 
 from app.services.report_extraction import Candidate
 
+OCR_TIMEOUT_SECONDS = 90
+
 
 def local_ocr_worker_python() -> Path:
     configured = os.environ.get("QD_OCR_PYTHON")
@@ -45,7 +47,13 @@ def extract_candidates_locally(file_name: str, content: bytes) -> list[Candidate
             stderr=subprocess.PIPE,
             cwd=repository,
             check=False,
+            timeout=OCR_TIMEOUT_SECONDS,
+            close_fds=True,
         )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"Local report extraction exceeded {OCR_TIMEOUT_SECONDS} seconds and was stopped."
+        ) from exc
     except OSError as exc:
         raise RuntimeError(f"Could not start the local OCR runtime: {exc}") from exc
 

@@ -11,10 +11,13 @@ import subprocess
 
 from PIL import Image, ImageDraw, ImageFont
 
+from app.services.classical_inference import ARTIFACTS, predict_classical
 from app.services.local_ocr_bridge import (
     extract_candidates_locally,
     local_ocr_worker_python,
 )
+from app.services.quantum_inference import predict_qsvm
+from app.services.random_forest_inference import FEATURES
 
 
 EXPECTED = {
@@ -135,6 +138,38 @@ def main() -> None:
     if len(glucose_without_unit) != 1 or "not stated" not in glucose_without_unit[0].unit.lower():
         raise AssertionError(f"Missing glucose unit was not flagged: {glucose_without_unit}")
     print("PASS missing glucose unit flagged for manual review")
+
+    # End-to-end software flow: extract candidates, add manually measured
+    # missing fields, confirm every feature, then run all five available models.
+    candidates = extract_candidates_locally("synthetic_prediction.png", image_bytes.getvalue())
+    candidate_by_feature = {}
+    for candidate in candidates:
+        if candidate.feature in candidate_by_feature:
+            raise AssertionError(f"Unexpected duplicate candidate: {candidate.feature}")
+        candidate_by_feature[candidate.feature] = candidate
+    confirmed_values = {
+        feature: candidate_by_feature[feature].value
+        for feature in candidate_by_feature
+        if "not mapped" not in candidate_by_feature[feature].unit.lower()
+        and "not stated" not in candidate_by_feature[feature].unit.lower()
+    }
+    # Synthetic user-reviewed measurements supplied for features absent from the report.
+    confirmed_values.update(
+        {
+            "Pregnancies": 2,
+            "SkinThickness": 25,
+            "Insulin": 90,
+            "DiabetesPedigreeFunction": 0.35,
+        }
+    )
+    confirmations = {feature: True for feature in FEATURES}
+    if set(confirmed_values) != set(FEATURES) or not all(confirmations.values()):
+        raise AssertionError("End-to-end test did not complete and confirm all eight inputs")
+    predictions = [predict_classical(name, confirmed_values) for name in ARTIFACTS]
+    predictions.append(predict_qsvm(confirmed_values))
+    if len(predictions) != 5 or any("predicted_label" not in item for item in predictions):
+        raise AssertionError(f"Expected five labeled predictions, got {predictions}")
+    print("PASS confirmed report-to-prediction flow: " + ", ".join(p["model"] for p in predictions))
 
     scanned_pdf = BytesIO()
     image.save(scanned_pdf, format="PDF", resolution=150)

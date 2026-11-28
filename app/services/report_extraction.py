@@ -148,22 +148,27 @@ def extract_report(file_name: str, content: bytes) -> tuple[str, list[Candidate]
         import pypdfium2 as pdfium
 
         pdf = pdfium.PdfDocument(content)
-        if len(pdf) > MAX_PDF_PAGES:
-            raise ValueError("PDF exceeds the 10-page processing limit.")
-        engine = None
-        for page_number, page in enumerate(pdf, start=1):
-            page_text = page.get_textpage().get_text_range()
-            text_lines = [line.strip() for line in page_text.splitlines() if line.strip()]
-            if text_lines:
-                lines.extend((line, page_number, None) for line in text_lines)
-            else:
-                if engine is None:
-                    from rapidocr import RapidOCR
+        try:
+            if len(pdf) > MAX_PDF_PAGES:
+                raise ValueError("PDF exceeds the 10-page processing limit.")
+            engine = None
+            for page_number, page in enumerate(pdf, start=1):
+                page_text = page.get_textpage().get_text_range()
+                text_lines = [line.strip() for line in page_text.splitlines() if line.strip()]
+                if text_lines:
+                    lines.extend((line, page_number, None) for line in text_lines)
+                else:
+                    if engine is None:
+                        from rapidocr import RapidOCR
 
-                    engine = RapidOCR()
-                image = page.render(scale=2.5).to_pil()
-                lines.extend((text, page_number, confidence) for text, _, confidence in _ocr_image(image, engine))
-        pdf.close()
+                        engine = RapidOCR()
+                    image = page.render(scale=2.5).to_pil()
+                    lines.extend(
+                        (text, page_number, confidence)
+                        for text, _, confidence in _ocr_image(image, engine)
+                    )
+        finally:
+            pdf.close()
     elif extension in {".png", ".jpg", ".jpeg"}:
         from PIL import Image
         from rapidocr import RapidOCR

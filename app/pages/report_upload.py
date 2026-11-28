@@ -10,6 +10,11 @@ import streamlit as st
 
 from app.services.classical_inference import ARTIFACTS, predict_classical
 from app.services.random_forest_inference import FEATURES
+from app.services.report_session import (
+    confirmed_candidate_defaults,
+    clear_sensitive_report_state,
+    unconfirmed_or_missing_features,
+)
 
 
 st.title("Medical report upload")
@@ -18,9 +23,7 @@ st.warning("Extracted values are candidates only. Confirm every feature, its uni
 
 
 def clear_report_state() -> None:
-    st.session_state.pop("medical_report_upload", None)
-    st.session_state.pop("report_candidates", None)
-    st.session_state.pop("last_live_model_predictions", None)
+    clear_sensitive_report_state(st.session_state)
 
 
 st.button("Clear report and extracted values", on_click=clear_report_state)
@@ -40,6 +43,11 @@ if uploaded is not None and st.button("Extract candidate values", type="primary"
         # remain in session state, while extracted full text is discarded.
         candidates = extract_candidates_locally(uploaded.name, uploaded.getvalue())
         st.session_state["report_candidates"] = [asdict(candidate) for candidate in candidates]
+        # Drop prior widget values so this rerun seeds the review form from the
+        # newly extracted candidates. Confirmations always reset to unchecked.
+        for feature in FEATURES:
+            st.session_state.pop(f"report_feature_{feature}", None)
+            st.session_state.pop(f"confirm_{feature}", None)
         st.success(f"Extraction complete. Found {len(candidates)} candidate measurement(s).")
     except (ValueError, RuntimeError) as exc:
         st.error(str(exc))
@@ -85,13 +93,12 @@ with st.form("report_confirmed_prediction", clear_on_submit=False):
     ]
     for index, (feature, unit, step) in enumerate(field_spec):
         matches = candidate_map.get(feature, [])
-        distinct_values = {float(item["value"]) for item in matches}
         unit_compatible = all(
             "not mapped" not in item["unit"].lower()
             and "not stated" not in item["unit"].lower()
             for item in matches
         )
-        candidate_value = next(iter(distinct_values)) if len(distinct_values) == 1 and unit_compatible else None
+        candidate_value = confirmed_candidate_defaults(candidate_rows, (feature,))[feature]
         target_col = col_a if index % 2 == 0 else col_b
         with target_col:
             values[feature] = st.number_input(
@@ -122,8 +129,7 @@ with st.form("report_confirmed_prediction", clear_on_submit=False):
     submitted = st.form_submit_button("Run confirmed predictions", type="primary", width="stretch")
 
 if submitted:
-    missing = [feature for feature in FEATURES if values[feature] is None]
-    unconfirmed = [feature for feature in FEATURES if not confirmations[feature]]
+    missing, unconfirmed = unconfirmed_or_missing_features(values, confirmations, FEATURES)
     if missing or unconfirmed:
         details = []
         if missing:
