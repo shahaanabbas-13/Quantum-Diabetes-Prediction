@@ -10,11 +10,13 @@ the session ends.
 
 ## Run locally
 
-From the repository root in PowerShell:
+The application environment uses Python 3.15. From the repository root in
+PowerShell, create it and install the pinned dependencies:
 
 ```powershell
+py -3.15 -m venv venv
 .\venv\Scripts\Activate.ps1
-pip install -r app\requirements.txt
+python -m pip install -r app\requirements.txt
 python -m streamlit run app\dashboard.py --server.address 127.0.0.1
 ```
 
@@ -46,8 +48,11 @@ extracted medical value requires explicit user confirmation regardless of OCR
 confidence.**
 
 The worker defaults to `.venv-documents\Scripts\python.exe`. For a different
-location, set `QD_OCR_PYTHON` to the Python 3.12 executable. On a deployment
-machine, run the synthetic validation command before enabling report uploads.
+location, set `QD_OCR_PYTHON` to the Python 3.12 executable. On this Windows
+machine, Application Control blocked the OCR native DLL when the worker venv
+was under `%TEMP%`; the repo-local worker created by the commands above passed.
+Use a worker location permitted by the target machine's application-control
+policy, then run the synthetic validation command before enabling report uploads.
 
 The application expects these classical artifacts under `models/classical/`:
 
@@ -87,9 +92,9 @@ Streamlit end-to-end upload/review/confirmation checks with
 
 ## Deployment checks
 
-From a clean checkout, install the application and document-worker requirements
-in their respective environments, ensure the local model artifacts above are
-provisioned, then run:
+From a clean checkout, create Python 3.15 `venv` and Python 3.12
+`.venv-documents` as above, install the respective requirements, and ensure the
+local model artifacts above are provisioned. Then run from the repository root:
 
 ```powershell
 python -m pip check

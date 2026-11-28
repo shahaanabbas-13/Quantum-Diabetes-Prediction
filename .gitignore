@@ -1,6 +1,7 @@
 venv/
 .venv/
 .venv-documents/
+.venv-documents-*/
 __pycache__/
 .ipynb_checkpoints/
 *.pyc
